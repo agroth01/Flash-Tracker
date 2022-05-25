@@ -22,5 +22,5 @@ class ServerCommands:
     LOBBY_BROADCAST = "lobby_broadcast"
 
 class MessageType:
-    SERVER = "server"
-    LOBBY = "lobby"
+    RESPONSE = "response"
+    MESSAGE = "message"

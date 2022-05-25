@@ -68,7 +68,7 @@ class Lobby:
     def broadcast(self, sender, message):
         for client in self.clients:
             if (client != sender):
-                client.send_message(MessageType.LOBBY, message)
+                client.send_message(MessageType.MESSAGE, message)
 
     # compares the client passed to method with all clients connected to this room.
     # return bool indicating whether client is found
@@ -154,7 +154,7 @@ class Server:
             lobbies = []
             for lobby in self.lobby_list:
                 lobbies.append(lobby.id)
-            message.sender.send_message(MessageType.SERVER, lobbies)
+            message.sender.send_message(MessageType.RESPONSE, lobbies)
 
         # LOBBY CREATION
         elif (command.prefix == ServerCommands.CREATE_LOBBY):
@@ -163,13 +163,13 @@ class Server:
                     new_lobby = Lobby(lobby_id, message.sender, self._on_lobby_deletion)
                     self.lobby_list.append(new_lobby)
                     self._log(f"{message.sender.address} created lobby with id: {lobby_id}")
-                    message.sender.send_message(MessageType.SERVER, True)
+                    message.sender.send_message(MessageType.RESPONSE, True)
 
                 # lobby already exists
                 else:
                     error_message = f"{message.sender.address} failed to create lobby with id: {lobby_id}"
                     self._log(error_message)
-                    message.sender.send_message(MessageType.SERVER, False)
+                    message.sender.send_message(MessageType.RESPONSE, False)
 
         # LOBBY JOINING
         elif (command.prefix == ServerCommands.JOIN_LOBBY):
@@ -181,17 +181,17 @@ class Server:
                 if not (desired_lobby.client_in_lobby(message.sender)):
                     desired_lobby.add_client(message.sender)
                     self._log(f"{message.sender.address} joined lobby {lobby_id}")
-                    message.sender.send_message(MessageType.SERVER, True)
+                    message.sender.send_message(MessageType.RESPONSE, True)
 
                 # client is already in the lobby
                 else:
                     self._log(f"{message.sender.address} attempted to join lobby it's already in ({lobby_id})")
-                    message.sender.send_message(MessageType.SERVER, False)
+                    message.sender.send_message(MessageType.RESPONSE, False)
 
             # lobby does not exist
             else:
                 self._log(f"{message.sender.address} attempted to join lobby that does not exist ({lobby_id})")
-                message.sender.send_message(MessageType.SERVER, False)
+                message.sender.send_message(MessageType.RESPONSE, False)
 
         # LOBBY BROADCAST
         elif (command.prefix == ServerCommands.LOBBY_BROADCAST):
@@ -200,16 +200,16 @@ class Server:
             if (message.sender.in_lobby()):
                 message.sender.current_lobby.broadcast(message.sender, msg)
                 self._log(f"{message.sender.address} broadcasted {msg} to lobby {message.sender.current_lobby.id}")
-                message.sender.send_message(MessageType.SERVER, True)
+                message.sender.send_message(MessageType.RESPONSE, True)
 
             # client not in lobby
             else:
                 self._log(f"{message.sender.address} tried to broadcast while not in lobby")
-                message.sender.send_message(MessageType.SERVER, False)
+                message.sender.send_message(MessageType.RESPONSE, False)
 
         # UNKNOWN COMMAND
         else:
-            message.sender.send_message(MessageType.SERVER, "unknown_command")
+            message.sender.send_message(MessageType.RESPONSE, "unknown_command")
             self._log(f"{message.sender.address} requested unknown command: {command.prefix}")
 
     # called when a client has disconnected from server
