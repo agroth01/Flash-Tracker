@@ -14,22 +14,27 @@ multiple clients in Leauge of Legends.
 # =================================================================
 import time
 import os
-import keyboard
 import modules.game.api as api
 from modules.connection.server_connection import Server
+from modules.overlay.overlay import Overlay
 
 # =================================================================
 # callbacks
 # =================================================================
+overlay = Overlay(1.5, 1, 50, 50)
+all_enemies = []
+
+
 def on_message(message):
-    print(message)
+    for enemy in all_enemies:
+        if enemy.champion == message:
+            enemy.flash_cooldown = 300
 
 # create a connection to the master server and start listening for messages
 server = Server("35.228.34.91", 3389)
 server.start_listening(on_message)
 
 #server.wait_for_server_response("join_lobby test_lobby")
-
 # wait for the server to connect
 while not server.connected:
     pass
@@ -62,28 +67,32 @@ class Enemy:
         self.flash_cooldown = 0
         self.champion = champion
 
-# store list of enemies
-enemies = []
+def on_click(event, arg):
+    server.wait_for_server_response(f"lobby_broadcast {arg}")
+    for enemy in all_enemies:
+        if enemy.champion == arg:
+            enemy.flash_cooldown = 300
+
+
 for enemy in api.get_all_enemies():
-    enemies.append(Enemy(enemy["championName"]))
+    overlay.add_player(enemy["championName"], on_click)
+    all_enemies.append(Enemy(enemy["championName"]))
+
 
 # main loop
-target_speed = 1 / 60
 while True:
     start_time = time.time()
+    overlay.root.update()
 
-    # drawing of enemy stats
-    os.system("cls")
-    for enemy in enemies:
-        print(f"{enemy.champion}: {int(enemy.flash_cooldown)}")
+    # updating enemy
+    for player in overlay.players:
+        for enemy in all_enemies:
+            if (enemy.champion == player.champion):
+                player.set_text(int(enemy.flash_cooldown))
 
-    if (keyboard.is_pressed("L")):
-        server.wait_for_server_response(f"broadcast {enemies[0]}")
-        time.sleep(0.05)
-
-        # update flash cooldowns
+    # update flash cooldowns
     delta = time.time() - start_time
-    for enemy in enemies:
+    for enemy in all_enemies:
         enemy.flash_cooldown -= delta
         if (enemy.flash_cooldown < 0):
             enemy.flash_cooldown = 0

@@ -31,3 +31,19 @@ def get_primary_size():
     """
     primary = get_primary_monitor()
     return (primary.width, primary.height)
+
+def width_unit():
+    """
+    Returns the width of the screen divided by 10, so the scales used when
+    settings size of the overlay is consistent with the size of screen
+    """
+    primary_width = int(get_primary_monitor().width / 10)
+    return primary_width
+
+def height_unit():
+    """
+    Returns the height of the screen divided by 10, so the scales used when
+    settings size of the overlay is consistent with the size of screen
+    """
+    primary_height = int(get_primary_monitor().height / 10)
+    return primary_height
